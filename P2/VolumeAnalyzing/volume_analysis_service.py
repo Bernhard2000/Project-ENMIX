@@ -3,6 +3,10 @@ import wave
 from paho.mqtt import client as mqtt_client
 
 
+topic_volume_feedback = "15372648/enmix/player/volume/feedback"
+mqtt_broker_url = "broker.hivemq.com"
+mqtt_broker_port = 1883
+
 def meaure_volume() -> float:
     return 0
 
