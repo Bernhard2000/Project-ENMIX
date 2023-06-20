@@ -239,26 +239,26 @@ def subscribe(client: mqtt_client, topic):
             s.set_pixels(prev_track())
             print("prev")
         elif msg.topic == topic_volume_db:
-            print("lvl: ", msg.payload.decode())
-            if int(msg.payload.decode()) <= 12:
+            level = float(msg.payload.decode())
+            if level <= 12:
                 s.set_pixels(volume_lvl1())
                 print("lvl 1")
-            elif 25 >= int(msg.payload.decode()) > 12:
+            elif 25 >= level > 12:
                 s.set_pixels(volume_lvl2())
                 print("lvl 2")
-            elif 37 >= int(msg.payload.decode()) > 25:
+            elif 37 >= level > 25:
                 s.set_pixels(volume_lvl3())
                 print("lvl 3")
-            elif 49 >= int(msg.payload.decode()) > 37:
+            elif 49 >= level > 37:
                 s.set_pixels(volume_lvl4())
                 print("lvl 4")
-            elif 61 >= int(msg.payload.decode()) > 49:
+            elif 61 >= level > 49:
                 s.set_pixels(volume_lvl5())
                 print("lvl 5")
-            elif 73 >= int(msg.payload.decode()) > 61:
+            elif 73 >= level > 61:
                 s.set_pixels(volume_lvl6())
                 print("lvl 6")
-            elif 85 >= int(msg.payload.decode()) > 73:
+            elif 85 >= level > 73:
                 s.set_pixels(volume_lvl7())
                 print("lvl 7")
             else:

@@ -8,6 +8,12 @@ import types
 
 from paho.mqtt import client as mqtt_client
 
+TOPIC_START = "15372648/enmix/controller/command/start"
+TOPIC_NEXT = "15372648/enmix/controller/command/next"
+TOPIC_PREVIOUS = "15372648/enmix/controller/command/previous"
+TOPIC_VOLUME = "15372648/enmix/controller/command/volume"
+TOPIC_RICKROLL = "15372648/enmix/controller/command/rickroll"
+
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
@@ -22,9 +28,8 @@ indexfinger.touchRegistered = 0
 volume = 50
 
 
-broker = 'broker.emqx.io'
+broker = "broker.hivemq.com"
 port = 1883
-topic = "python/mqtt"
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
 # username = 'emqx'
 # password = 'public'
@@ -88,7 +93,7 @@ client.loop_start()
 
 
 
-cap = cv2.VideoCapture("http://192.168.1.9:8000/stream.mjpg")
+cap = cv2.VideoCapture("http://10.0.0.174:8000/stream.mjpeg")
 with mp_hands.Hands(static_image_mode=0, model_complexity=0, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=1) as hands:
     while cap.isOpened():
         success, image = cap.read()
@@ -143,39 +148,38 @@ with mp_hands.Hands(static_image_mode=0, model_complexity=0, min_detection_confi
                         #    volume = 0
                         #if volume > 100:
                         #    volume = 100
-                        volume = -0.1 * (a[l.INDEX_FINGER_TIP][2] - indexfinger.startY)
-                        result = client.publish(topic, "Volume:" + str(volume))
+                        volume = -0.05 * (a[l.INDEX_FINGER_TIP][2] - indexfinger.startY)
+                        result = client.publish(TOPIC_VOLUME, str(int(volume)))
                         # result: [0, 1]
                         status = result[0]
                         if status != 0:
-                            print(f"Failed to send message to topic {topic}")
+                            print(f"Failed to send message to topic {TOPIC_VOLUME}")
                         indexfinger.touchCounter = 0
-                        print("Set volume: " + str(volume))
+                        print("Change volume: " + str(int(volume)))
 
                 else:
                     indexfinger.touching = False
-                    if time.time_ns() - indexfinger.lastTouch > 1000000000:
+                    if time.time_ns() - indexfinger.lastTouch > 1000000000 and indexfinger.touchCounter > 0:
+                        topic = None
                         if indexfinger.touchCounter == 1:
-                            result = client.publish(topic, "Start/Stop")
-                            # result: [0, 1]
-                            status = result[0]
-                            if status != 0:
-                                print(f"Failed to send message to topic {topic}")
+                            topic = TOPIC_START
                             print("Start/Stop")
                         if indexfinger.touchCounter == 2:
-                            result = client.publish(topic, "Next Track")
-                            # result: [0, 1]
-                            status = result[0]
-                            if status != 0:
-                                print(f"Failed to send message to topic {topic}")
+                            topic = TOPIC_NEXT
                             print("Next Track")
                         if indexfinger.touchCounter == 3:
-                            result = client.publish(topic, "Previous Track")
+                            topic = TOPIC_PREVIOUS
+                            print("Previous Track")
+                        if indexfinger.touchCounter == 4:
+                            topic = TOPIC_RICKROLL
+                            print("Rickroll")
+
+                        if topic is not None:
+                            result = client.publish(topic=topic, payload="")
                             # result: [0, 1]
                             status = result[0]
                             if status != 0:
                                 print(f"Failed to send message to topic {topic}")
-                            print("Previous Track")
                         indexfinger.touchCounter = 0
 
         # Flip the image horizontally for a selfie-view display.

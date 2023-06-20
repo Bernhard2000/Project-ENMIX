@@ -16,6 +16,7 @@ client: mqtt_client
 
 # Volume
 volume_threshold = 12
+last_sent_volume = 0
 
 
 def publish_volume_value(volume: float):
@@ -28,18 +29,24 @@ def publish_volume_value(volume: float):
 
 
 def start_working_cycle():
+    sd._terminate()
+    sd._initialize()
     global last_sent_volume
-    last_sent_volume = 0
 
     def check_volume(indata, outdata, frames, time, status):
+        sd.sleep(50)
         global last_sent_volume
-        volume = np.linalg.norm(indata)*10
-        if abs(volume-last_sent_volume) > volume_threshold:
-            publish_volume_value(volume)
-            last_sent_volume = volume
+        try:
+            volume = np.linalg.norm(indata)*10
+            print(volume)
+            if abs(volume-last_sent_volume) > volume_threshold:
+                publish_volume_value(volume)
+                last_sent_volume = volume
+        except:
+            print("ignore error")# error occured -- ignored
 
-    with sd.Stream(callback=check_volume):
-        sd.sleep(24*60*60*1000)     # default a day runtime
+    with sd.Stream(callback=check_volume, finished_callback=start_working_cycle):
+        sd.sleep(10000)
     return
 
 
