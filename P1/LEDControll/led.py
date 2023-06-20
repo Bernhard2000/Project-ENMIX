@@ -12,7 +12,6 @@ topic_next = "15372648/enmix/controller/command/next"
 topic_prev = "15372648/enmix/controller/command/previous"
 
 topic_volume_db = "15372648/enmix/player/volume/feedback"
-topic_volume_lvl = "15372648/enmix/player/volume/level"
 
 # Generate a Client ID with the subscribe prefix.
 client_id = f'subscribe-{random.randint(0, 100)}'
@@ -36,65 +35,6 @@ def connect_mqtt() -> mqtt_client:
     client.on_connect = on_connect
     client.connect(broker, port)
     return client
-
-
-def subscribe(client: mqtt_client, topic):
-    def on_message(client, userdata, msg):
-        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
-        if msg.topic == topic_start:
-            s.set_pixels(start_stop())
-            print("start/stop")
-        elif msg.topic == topic_next:
-            s.set_pixels(next_track())
-            print("next")
-        elif msg.topic == topic_prev:
-            s.set_pixels(prev_track())
-            print("prev")
-        elif msg.topic == topic_volume_db:
-            print("db: ", msg.payload.decode())
-        elif msg.topic == topic_volume_lvl:
-            print("lvl: ", msg.payload.decode())
-            if int(msg.payload.decode()) <= 12:
-                s.set_pixels(volume_lvl1())
-                print("lvl 1")
-            elif 25 >= int(msg.payload.decode()) > 12:
-                s.set_pixels(volume_lvl2())
-                print("lvl 2")
-            elif 37 >= int(msg.payload.decode()) > 25:
-                s.set_pixels(volume_lvl3())
-                print("lvl 3")
-            elif 49 >= int(msg.payload.decode()) > 37:
-                s.set_pixels(volume_lvl4())
-                print("lvl 4")
-            elif 61 >= int(msg.payload.decode()) > 49:
-                s.set_pixels(volume_lvl5())
-                print("lvl 5")
-            elif 73 >= int(msg.payload.decode()) > 61:
-                s.set_pixels(volume_lvl6())
-                print("lvl 6")
-            elif 85 >= int(msg.payload.decode()) > 73:
-                s.set_pixels(volume_lvl7())
-                print("lvl 7")
-            else:
-                s.set_pixels(volume_lvl8())
-                print("lvl 8")
-
-    client.subscribe(topic)
-    client.on_message = on_message
-
-
-def run():
-    client = connect_mqtt()
-    subscribe(client, topic_start)
-    subscribe(client, topic_next)
-    subscribe(client, topic_prev)
-    subscribe(client, topic_volume_db)
-    subscribe(client, topic_volume_lvl)
-    client.loop_forever()
-
-
-if __name__ == '__main__':
-    run()
 
 green = (0, 255, 0)
 yellow = (255, 255, 0)
@@ -284,3 +224,59 @@ def volume_lvl8():
         G, G, G, Y, Y, Y, R, R,
     ]
     return logo
+
+
+def subscribe(client: mqtt_client, topic):
+    def on_message(client, userdata, msg):
+        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        if msg.topic == topic_start:
+            s.set_pixels(start_stop())
+            print("start/stop")
+        elif msg.topic == topic_next:
+            s.set_pixels(next_track())
+            print("next")
+        elif msg.topic == topic_prev:
+            s.set_pixels(prev_track())
+            print("prev")
+        elif msg.topic == topic_volume_db:
+            print("lvl: ", msg.payload.decode())
+            if int(msg.payload.decode()) <= 12:
+                s.set_pixels(volume_lvl1())
+                print("lvl 1")
+            elif 25 >= int(msg.payload.decode()) > 12:
+                s.set_pixels(volume_lvl2())
+                print("lvl 2")
+            elif 37 >= int(msg.payload.decode()) > 25:
+                s.set_pixels(volume_lvl3())
+                print("lvl 3")
+            elif 49 >= int(msg.payload.decode()) > 37:
+                s.set_pixels(volume_lvl4())
+                print("lvl 4")
+            elif 61 >= int(msg.payload.decode()) > 49:
+                s.set_pixels(volume_lvl5())
+                print("lvl 5")
+            elif 73 >= int(msg.payload.decode()) > 61:
+                s.set_pixels(volume_lvl6())
+                print("lvl 6")
+            elif 85 >= int(msg.payload.decode()) > 73:
+                s.set_pixels(volume_lvl7())
+                print("lvl 7")
+            else:
+                s.set_pixels(volume_lvl8())
+                print("lvl 8")
+
+    client.subscribe(topic)
+    client.on_message = on_message
+
+
+def run():
+    client = connect_mqtt()
+    subscribe(client, topic_start)
+    subscribe(client, topic_next)
+    subscribe(client, topic_prev)
+    subscribe(client, topic_volume_db)
+    client.loop_forever()
+
+
+if __name__ == '__main__':
+    run()
