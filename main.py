@@ -91,9 +91,9 @@ client.on_disconnect = on_disconnect
 client.loop_start()
 
 
+lastChange = time.time_ns()
 
-
-cap = cv2.VideoCapture("http://10.0.0.174:8000/stream.mjpeg")
+cap = cv2.VideoCapture("http://10.0.0.200:8000/stream.mjpeg")
 with mp_hands.Hands(static_image_mode=0, model_complexity=0, min_detection_confidence=0.7, min_tracking_confidence=0.7, max_num_hands=1) as hands:
     while cap.isOpened():
         success, image = cap.read()
@@ -131,7 +131,7 @@ with mp_hands.Hands(static_image_mode=0, model_complexity=0, min_detection_confi
                 q = [a[l.THUMB_TIP][1], a[l.THUMB_TIP][2], a[l.THUMB_TIP][3]]
                 t = [a[l.INDEX_FINGER_MCP][1], a[l.INDEX_FINGER_MCP][2], a[l.INDEX_FINGER_MCP][3]]
                 u = [a[l.WRIST][1], a[l.WRIST][2], a[l.WRIST][3]]
-                if math.dist(p, q) < (math.dist(t, u)/10 + 10):
+                if math.dist(p, q) < (math.dist(t, u)/10 + 20):
                     if not indexfinger.touching:
                         indexfinger.touching = True
                         oldvolume = volume
@@ -148,16 +148,19 @@ with mp_hands.Hands(static_image_mode=0, model_complexity=0, min_detection_confi
                         #    volume = 0
                         #if volume > 100:
                         #    volume = 100
-                        volume = -0.05 * (a[l.INDEX_FINGER_TIP][2] - indexfinger.startY)
-                        result = client.publish(TOPIC_VOLUME, str(int(volume)))
-                        # result: [0, 1]
-                        status = result[0]
-                        if status != 0:
-                            print(f"Failed to send message to topic {TOPIC_VOLUME}")
-                        indexfinger.touchCounter = 0
-                        print("Change volume: " + str(int(volume)))
+                        volume = int(-0.05 * (a[l.INDEX_FINGER_TIP][2] - indexfinger.startY))
+                        if volume != 0:
+                            if time.time_ns() - lastChange > 300000000:
+                                lastChange = time.time_ns()
+                                result = client.publish(TOPIC_VOLUME, str(volume))
+                                # result: [0, 1]
+                                status = result[0]
+                                if status != 0:
+                                    print(f"Failed to send message to topic {TOPIC_VOLUME}")
+                                indexfinger.touchCounter = 0
+                                print("Change volume: " + str(volume))
 
-                else:
+                elif math.dist(p, q) > (math.dist(t, u)/10 + 50):
                     indexfinger.touching = False
                     if time.time_ns() - indexfinger.lastTouch > 1000000000 and indexfinger.touchCounter > 0:
                         topic = None
