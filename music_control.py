@@ -81,6 +81,8 @@ def run():
     subscribe(client, topic_start)
     subscribe(client, topic_next)
     subscribe(client, topic_prev)
+    subscribe(client, topic_volume)
+    subscribe(client, topic_rickroll)
     client.loop_forever()
 
 
