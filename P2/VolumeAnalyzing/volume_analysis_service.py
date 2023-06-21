@@ -37,16 +37,16 @@ def start_working_cycle():
         sd.sleep(50)
         global last_sent_volume
         try:
-            volume = np.linalg.norm(indata)*10
-            print(volume)
+            volume = int(np.linalg.norm(indata)*10)
             if abs(volume-last_sent_volume) > volume_threshold:
+                print(volume)
                 publish_volume_value(volume)
                 last_sent_volume = volume
         except:
             print("ignore error")# error occured -- ignored
 
     with sd.Stream(callback=check_volume, finished_callback=start_working_cycle):
-        sd.sleep(10000)
+        sd.sleep(1000*60*60*24)
     return
 
 
